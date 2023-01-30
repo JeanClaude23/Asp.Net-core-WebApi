@@ -33,25 +33,59 @@ namespace WebApi.Controllers
             return Ok(await _context.WebApiUsers
                 .ToListAsync());
         }
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<List<WebApiUser>>> GetbyId(int id)
+        public async Task<ActionResult<WebApiUser>> GetUserbyId(int id)
         {
             var user =await _context.WebApiUsers.FindAsync(id);
             if(user == null)
             {
                 return BadRequest("User not found");
             }
-            return Ok(user);
+            //return Ok(user);
+            return user;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<List<WebApiUser>>> AddUser(WebApiUser user)
+        //[HttpPost]
+        //public async Task<ActionResult<List<WebApiUser>>> AddUser(WebApiUser user)
+        //{
+        //    _context.WebApiUsers.Add(user);
+        //    await _context.SaveChangesAsync();
+        //    return Ok(await _context.WebApiUsers.ToListAsync());
+
+        //}
+        [HttpPost("cookies/{username}")]
+        public async Task<ActionResult<string>> SetCookieAsync([FromRoute] String username)
         {
-            _context.WebApiUsers.Add(user);
-            await _context.SaveChangesAsync();
-            return Ok(await _context.WebApiUsers.ToListAsync());
-
+            var webApiUsers = await _context.WebApiUsers.ToListAsync();
+            var webApiUserId = webApiUsers.Find(x => x.Username == username).Id.ToString();
+            var cookie = new Cookie("AccountID", webApiUserId);
+            cookie.Expires = DateTime.Now.AddDays(1);
+            Response.Cookies.Append("AccountID", webApiUserId, new CookieOptions { Expires = DateTime.Now.AddDays(1) });
+            //HttpContext.Session.SetString("AccountID", webApiUserId);
+            var newCookies = new[] { string.Format("AccountID={0}", webApiUserId) };
+            Request.Headers["Cookie"] = newCookies;
+            if (Request.Cookies["AccountID"] != null)
+                return Ok("The cookie is saved");
+            return BadRequest("The cookie wasn't saved");
         }
+
+        [HttpGet("cookies")]
+        public string GetCookie()
+        {
+            return Request.Cookies["AccountID"]!;
+        }
+
+        [HttpDelete("cookies")]
+        public ActionResult DeleteCookie()
+        {
+            Response.Cookies.Delete("AccountID");
+            Request.Headers["Cookie"] = "";
+            if (Request.Cookies["AccountID"] == null)
+                return Ok("The cookie was successfully deleted");
+            return BadRequest("The cookie didn't get deleted");
+        }
+
         [HttpPut]
         public async Task<ActionResult<List<WebApiUser>>> UpdateUser(WebApiUser user)
         {
