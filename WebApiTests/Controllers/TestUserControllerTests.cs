@@ -39,8 +39,8 @@ namespace WebApi.Controllers.Tests
         {
             controller.ControllerContext = new ControllerContext();
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            var result = await controller.SetCookieAsync("Roger");
-            Assert.AreEqual(controller.GetCookie(), "1");
+            var result = await controller.SetCookieAsync("jean");
+            Assert.AreEqual(controller.GetCookie(), "4");
         }
 
         [TestMethod()]
